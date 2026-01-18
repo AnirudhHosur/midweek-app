@@ -1,50 +1,114 @@
-# Welcome to your Expo app 👋
+# Mindweek - Mental Wellness App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native application built with Expo and Nativewind for mental wellness tracking and support.
 
-## Get started
+## Features
 
-1. Install dependencies
+### Authentication System
+- **Splash Screen**: Beautiful animated splash screen with app logo
+- **Sign In**: Email/password authentication with form validation
+- **Sign Up**: User registration with password confirmation
+- **Auth Context**: Global authentication state management
+- **Protected Routes**: Automatic redirection based on auth status
 
+### Tech Stack
+- **React Native** with Expo
+- **Nativewind** (Tailwind CSS for React Native)
+- **Expo Router** for navigation
+- **TypeScript** for type safety
+- **Context API** with AsyncStorage for state persistence
+
+## Project Structure
+
+```
+app/
+├── index.tsx           # Splash screen
+├── _layout.tsx         # Root layout with AuthProvider
+├── (auth)/
+│   ├── login.tsx       # Sign in page
+│   └── signup.tsx      # Sign up page
+└── (tabs)/
+    └── index.tsx       # Main dashboard
+contexts/
+└── AuthContext.tsx     # Authentication context
+```
+
+## Getting Started
+
+1. **Install dependencies**:
    ```bash
    npm install
    ```
 
-2. Start the app
-
+2. **Start the development server**:
    ```bash
-   npx expo start
+   npm start
    ```
 
-In the output, you'll find options to open the app in a
+3. **Open in Expo Go**:
+   - Scan the QR code with Expo Go app
+   - Or press `w` to open in web browser
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Current Working Features
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+✅ **Complete Authentication Flow**
+- Splash screen with app logo
+- Login/Signup forms with validation
+- Protected routes
+- Session persistence
 
-## Get a fresh project
+✅ **UI/UX**
+- Beautiful gradient backgrounds
+- Responsive form layouts
+- Loading states
+- Error handling
 
-When you're ready, run:
+✅ **Technical**
+- Nativewind CSS styling
+- Expo Router navigation
+- AsyncStorage for persistence
+- TypeScript type safety
 
-```bash
-npm run reset-project
-```
+## Authentication Flow
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+1. **Splash Screen** (2 seconds) → redirects to Login
+2. **Login Page** → authenticate user → redirects to Dashboard
+3. **Signup Page** → create new account → redirects to Dashboard
+4. **Dashboard** → access main app features
+5. **Logout** → clears session → redirects to Splash Screen
 
-## Learn more
+## Customization
 
-To learn more about developing your project with Expo, look at the following resources:
+### Branding
+- Update `assets/images/applogo.png` with your app logo
+- Modify colors in the Tailwind classes throughout the app
+- Adjust splash screen duration in `app/index.tsx`
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Authentication
+- Uses `@react-native-async-storage/async-storage` for session persistence
+- Modify `contexts/AuthContext.tsx` to integrate with your backend API
+- Update validation rules in login/signup forms
+- Add additional user fields as needed
 
-## Join the community
+## Deployment
 
-Join our community of developers creating universal apps.
+1. **Build for production**:
+   ```bash
+   expo build
+   ```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+2. **Publish to app stores**:
+   - Follow Expo's publishing guide
+   - Configure app.json with your app details
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a pull request
+
+## License
+
+MIT License
