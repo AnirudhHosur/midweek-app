@@ -37,12 +37,15 @@ export default function SignupScreen() {
     try {
       const success = await register(name, email, password);
       if (success) {
-        router.replace("/(tabs)");
-      } else {
-        Alert.alert("Error", "Registration failed");
+        Alert.alert("Success", "Account created successfully! Welcome to Mindweek!", [
+          {
+            text: "Start Journey",
+            onPress: () => router.replace("/(tabs)")
+          }
+        ]);
       }
-    } catch (error) {
-      Alert.alert("Error", "Something went wrong");
+    } catch (error: any) {
+      Alert.alert("Registration Failed", error.message || "Registration failed");
     } finally {
       setIsLoading(false);
     }

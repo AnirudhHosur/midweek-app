@@ -25,12 +25,15 @@ export default function LoginScreen() {
     try {
       const success = await login(email, password);
       if (success) {
-        router.replace("/(tabs)");
-      } else {
-        Alert.alert("Error", "Invalid credentials");
+        Alert.alert("Success", "Login successful! Welcome back!", [
+          {
+            text: "OK",
+            onPress: () => router.replace("/(tabs)")
+          }
+        ]);
       }
-    } catch (error) {
-      Alert.alert("Error", "Something went wrong");
+    } catch (error: any) {
+      Alert.alert("Login Failed", error.message || "Invalid credentials");
     } finally {
       setIsLoading(false);
     }

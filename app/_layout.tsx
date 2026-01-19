@@ -1,4 +1,5 @@
-import { Slot } from "expo-router";
+import { Slot, useRouter } from "expo-router";
+import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
 import "../global.css";
@@ -15,6 +16,14 @@ export default function RootLayout() {
 // This handles the routing logic based on auth state
 function AuthLayout() {
   const { isAuthenticated, loading } = useAuth();
+  const router = useRouter();
+
+  // Redirect unauthenticated users to login
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      router.replace("/(auth)/login");
+    }
+  }, [isAuthenticated, loading, router]);
 
   if (loading) {
     return (
@@ -29,7 +38,6 @@ function AuthLayout() {
     return <Slot />;
   }
 
-  // If not authenticated, let the normal routing handle it
-  // The splash screen will redirect to login after 2 seconds
+  // If not authenticated, redirect to login (this should rarely be reached due to useEffect)
   return <Slot />;
 }

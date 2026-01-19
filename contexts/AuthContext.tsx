@@ -1,5 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+    createUserWithEmailAndPassword,
+    User as FirebaseUser,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    signOut
+} from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { auth, db } from '../firebaseConfig';
 
 interface User {
   id: string;
@@ -27,47 +36,56 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Check if user is already logged in (from AsyncStorage)
+  // Listen to auth state changes
   useEffect(() => {
-    let isMounted = true;
-    
-    const checkAuthStatus = async () => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       try {
-        const storedUser = await AsyncStorage.getItem('user');
-        const storedAuth = await AsyncStorage.getItem('isAuthenticated');
-        
-        if (isMounted && storedUser && storedAuth === 'true') {
-          setUser(JSON.parse(storedUser));
+        if (firebaseUser) {
+          // User is signed in
+          const userData: User = {
+            id: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || ''
+          };
+          
+          setUser(userData);
           setIsAuthenticated(true);
+          
+          // Store in AsyncStorage
+          await AsyncStorage.setItem('user', JSON.stringify(userData));
+          await AsyncStorage.setItem('isAuthenticated', 'true');
+        } else {
+          // User is signed out
+          setUser(null);
+          setIsAuthenticated(false);
+          
+          // Clear AsyncStorage
+          await AsyncStorage.removeItem('user');
+          await AsyncStorage.removeItem('isAuthenticated');
         }
       } catch (error) {
-        console.error('Error checking auth status:', error);
+        console.error('Error handling auth state change:', error);
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
-    };
-    
-    checkAuthStatus();
-    
-    return () => {
-      isMounted = false;
-    };
+    });
+
+    // Cleanup subscription
+    return () => unsubscribe();
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Mock authentication - in real app, call your API
-      if (email && password) {
+      // Sign in with Firebase
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      if (userCredential.user) {
         const userData: User = {
-          id: '1',
-          email,
-          name: email.split('@')[0]
+          id: userCredential.user.uid,
+          email: userCredential.user.email || '',
+          name: userCredential.user.displayName || email.split('@')[0]
         };
         
         setUser(userData);
@@ -79,10 +97,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         return true;
       }
+      
       return false;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      return false;
+      let errorMessage = 'Failed to login';
+      
+      switch (error.code) {
+        case 'auth/user-not-found':
+          errorMessage = 'No user found with this email';
+          break;
+        case 'auth/wrong-password':
+          errorMessage = 'Incorrect password';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Invalid email address';
+          break;
+        case 'auth/user-disabled':
+          errorMessage = 'This account has been disabled';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = 'Too many failed attempts. Please try again later';
+          break;
+        default:
+          errorMessage = error.message || 'Failed to login';
+      }
+      
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -91,15 +132,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (name: string, email: string, password: string): Promise<boolean> => {
     try {
       setLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Mock registration - in real app, call your API
-      if (name && email && password) {
+      // Create user with Firebase
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      if (userCredential.user) {
+        // Save user data to Firestore
+        await setDoc(doc(db, 'users', userCredential.user.uid), {
+          uid: userCredential.user.uid,
+          email: email,
+          name: name,
+          createdAt: new Date(),
+          lastLogin: new Date()
+        });
+        
         const userData: User = {
-          id: Date.now().toString(),
-          email,
-          name
+          id: userCredential.user.uid,
+          email: userCredential.user.email || '',
+          name: name
         };
         
         setUser(userData);
@@ -111,23 +161,50 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         return true;
       }
+      
       return false;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration error:', error);
-      return false;
+      let errorMessage = 'Failed to register';
+      
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          errorMessage = 'Email already registered';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Invalid email address';
+          break;
+        case 'auth/weak-password':
+          errorMessage = 'Password should be at least 6 characters';
+          break;
+        case 'auth/operation-not-allowed':
+          errorMessage = 'Email/password accounts are not enabled';
+          break;
+        default:
+          errorMessage = error.message || 'Failed to register';
+      }
+      
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   const logout = async (): Promise<void> => {
-    setUser(null);
-    setIsAuthenticated(false);
     try {
+      await signOut(auth);
+      setUser(null);
+      setIsAuthenticated(false);
+      
+      // Clear AsyncStorage
       await AsyncStorage.removeItem('user');
       await AsyncStorage.removeItem('isAuthenticated');
+      
+      // Force a small delay to ensure state updates before any potential navigation
+      await new Promise(resolve => setTimeout(resolve, 100));
     } catch (error) {
       console.error('Error during logout:', error);
+      throw error;
     }
   };
 
