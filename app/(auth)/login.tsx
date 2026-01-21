@@ -15,7 +15,7 @@ export default function LoginScreen() {
   const router = useRouter();
   const { login } = useAuth();
 
-  const handleLogin = async () => {
+  const handleLogin = async() => {
     if (!email || !password) {
       Alert.alert("Error", "Please fill in all fields");
       return;
@@ -25,12 +25,7 @@ export default function LoginScreen() {
     try {
       const success = await login(email, password);
       if (success) {
-        Alert.alert("Success", "Login successful! Welcome back!", [
-          {
-            text: "OK",
-            onPress: () => router.replace("/(tabs)")
-          }
-        ]);
+        router.replace("/(tabs)");
       }
     } catch (error: any) {
       Alert.alert("Login Failed", error.message || "Invalid credentials");
@@ -41,7 +36,7 @@ export default function LoginScreen() {
 
   return (
     <View className="flex-1 bg-gradient-to-br from-violet-50 via-indigo-50 to-purple-50">
-      <StatusBar style="dark" translucent={false} backgroundColor="#ede9fe" />
+      <StatusBar style="dark" translucent={true} backgroundColor="transparent" />
       <CustomKeyboardView>
         <View className="flex-1 px-6 pt-6">
           <View className="flex-1 justify-center">

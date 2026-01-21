@@ -17,7 +17,7 @@ export default function SignupScreen() {
   const router = useRouter();
   const { register } = useAuth();
 
-  const handleSignup = async () => {
+  const handleSignup = async() => {
     if (!name || !email || !password || !confirmPassword) {
       Alert.alert("Error", "Please fill in all fields");
       return;
@@ -53,7 +53,7 @@ export default function SignupScreen() {
 
   return (
     <View className="flex-1 bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50">
-      <StatusBar style="dark" translucent={false} backgroundColor="#fce7f3" />
+      <StatusBar style="dark" translucent={true} backgroundColor="transparent" />
       <CustomKeyboardView>
         <View className="flex-1 px-6 pt-6">
           <View className="flex-1 justify-center">
