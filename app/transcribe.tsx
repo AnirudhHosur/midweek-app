@@ -1,12 +1,16 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { MotiView } from 'moti';
 import { useEffect, useRef } from 'react';
 import { Animated, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { TransitionOverlay } from '../components/animations/TransitionOverlay';
+import { useAnimation } from '../contexts/AnimationContext';
 
 export default function TranscribeScreen() {
   const router = useRouter();
   const waveAnimation = useRef(new Animated.Value(0)).current;
+  const { triggerHaptic, resetTransition } = useAnimation();
   
   // Mock data for tasks
   const tasks = [
@@ -48,7 +52,17 @@ export default function TranscribeScreen() {
     };
     
     animateWave();
-  }, [waveAnimation]);
+    
+    // Trigger haptic feedback when screen loads
+    triggerHaptic('medium');
+  }, [waveAnimation, triggerHaptic]);
+
+  // Reset animation state when navigating away (cleanup)
+  useEffect(() => {
+    return () => {
+      resetTransition();
+    };
+  }, [resetTransition]);
 
   const waveBars = Array.from({ length: 10 }, (_, i) => (
     <Animated.View
@@ -68,112 +82,144 @@ export default function TranscribeScreen() {
   ));
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" translucent={true} backgroundColor="transparent" />
-      {/* Top Navigation Bar */}
-      <View style={styles.navbar}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <MaterialIcons name="arrow-back-ios" size={24} color="#0d131c" />
-        </TouchableOpacity>
-        
-        <Text style={styles.navTitle}>MindWeek</Text>
-        
-        <TouchableOpacity style={styles.menuButton}>
-          <MaterialIcons name="more-horiz" size={24} color="#0d131c" />
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Raw Transcript Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>RAW TRANSCRIPT</Text>
-            <Text style={styles.autoSaveText}>Auto-saved</Text>
-          </View>
+    <TransitionOverlay isActive={false}>
+      <View style={styles.container}>
+        <StatusBar style="dark" translucent={true} backgroundColor="transparent" />
+        {/* Top Navigation Bar */}
+        <View style={styles.navbar}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => {
+              resetTransition();
+              router.back();
+            }}
+          >
+            <MaterialIcons name="arrow-back-ios" size={24} color="#0d131c" />
+          </TouchableOpacity>
           
-          <View style={styles.transcriptBox}>
-            <Text style={styles.transcriptText}>
-              &quot;I need to finish that <Text style={styles.highlight}>IRCC form</Text> by <Text style={styles.highlight}>Tuesday</Text> and also grab some <Text style={styles.highlight}>milk and bread</Text> on the way home...&quot;
-            </Text>
-          </View>
+          <Text style={styles.navTitle}>MindWeek</Text>
+          
+          <TouchableOpacity style={styles.menuButton}>
+            <MaterialIcons name="more-horiz" size={24} color="#0d131c" />
+          </TouchableOpacity>
         </View>
 
-        {/* Waveform Visualizer */}
-        <View style={styles.waveformContainer}>
-          <View style={styles.waveform}>
-            {waveBars}
-          </View>
-          <Text style={styles.processingText}>AI is processing your brain dump...</Text>
-        </View>
-
-        {/* Task List Section */}
-        <View style={styles.section}>
-          <View style={styles.taskHeader}>
-            <Text style={styles.taskTitle}>Tasks I found</Text>
-            <View style={styles.itemCount}>
-              <Text style={styles.itemCountText}>2 items</Text>
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Raw Transcript Section */}
+          <MotiView
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 300, delay: 200 }}
+          >
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>RAW TRANSCRIPT</Text>
+                <Text style={styles.autoSaveText}>Auto-saved</Text>
+              </View>
+              
+              <View style={styles.transcriptBox}>
+                <Text style={styles.transcriptText}>
+                  &quot;I need to finish that <Text style={styles.highlight}>IRCC form</Text> by <Text style={styles.highlight}>Tuesday</Text> and also grab some <Text style={styles.highlight}>milk and bread</Text> on the way home...&quot;
+                </Text>
+              </View>
             </View>
-          </View>
-          
-          <View style={styles.taskList}>
-            {tasks.map((task) => (
-              <TouchableOpacity 
-                key={task.id} 
-                style={styles.taskCard}
-                onPress={() => router.push('../task-details')}
-              >
-                <View style={styles.taskHeaderRow}>
-                  <View style={styles.taskInfo}>
-                    <Text style={styles.taskName}>{task.title}</Text>
-                    <View style={styles.tagContainer}>
-                      <View style={[styles.categoryTag, { backgroundColor: 'rgba(15, 109, 240, 0.1)' }]}>
-                        <Text style={[styles.tagText, { color: '#0f6df0' }]}>{task.category}</Text>
-                      </View>
-                      <View style={[styles.priorityTag, { backgroundColor: `${task.priorityColor}20` }]}>
-                        <View style={[styles.priorityDot, { backgroundColor: task.priorityColor }]} />
-                        <Text style={[styles.tagText, { color: task.priorityColor }]}>{task.priority} Priority</Text>
-                      </View>
-                    </View>
-                  </View>
-                  <TouchableOpacity style={styles.editButton}>
-                    <MaterialIcons name="edit-note" size={24} color="#94a3b8" />
-                  </TouchableOpacity>
-                </View>
-                
-                <View style={styles.taskDetails}>
-                  <MaterialIcons name={task.icon as any} size={16} color="#64748b" />
-                  <Text style={styles.detailText}>{task.dueDate || task.details}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-            
-            {/* Quick Add Placeholder */}
-            <TouchableOpacity 
-              style={styles.addButton}
-              onPress={() => router.push('../task-details')}
-            >
-              <MaterialIcons name="add-circle" size={20} color="#94a3b8" />
-              <Text style={styles.addButtonText}>Add another task</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ScrollView>
+          </MotiView>
 
-      {/* Sticky Footer CTA */}
-      <View style={styles.footer}>
-        <TouchableOpacity 
-          style={styles.ctaButton}
-          onPress={() => router.push('/')}
+          {/* Waveform Visualizer */}
+          <MotiView
+            from={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', damping: 15, delay: 300 }}
+          >
+            <View style={styles.waveformContainer}>
+              <View style={styles.waveform}>
+                {waveBars}
+              </View>
+              <Text style={styles.processingText}>AI is processing your brain dump...</Text>
+            </View>
+          </MotiView>
+
+          {/* Task List Section */}
+          <MotiView
+            from={{ opacity: 0, translateY: 30 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 300, delay: 400 }}
+          >
+            <View style={styles.section}>
+              <View style={styles.taskHeader}>
+                <Text style={styles.taskTitle}>Tasks I found</Text>
+                <View style={styles.itemCount}>
+                  <Text style={styles.itemCountText}>2 items</Text>
+                </View>
+              </View>
+              
+              <View style={styles.taskList}>
+                {tasks.map((task) => (
+                  <TouchableOpacity 
+                    key={task.id} 
+                    style={styles.taskCard}
+                    onPress={() => router.push('../task-details')}
+                  >
+                    <View style={styles.taskHeaderRow}>
+                      <View style={styles.taskInfo}>
+                        <Text style={styles.taskName}>{task.title}</Text>
+                        <View style={styles.tagContainer}>
+                          <View style={[styles.categoryTag, { backgroundColor: 'rgba(15, 109, 240, 0.1)' }]}>
+                            <Text style={[styles.tagText, { color: '#0f6df0' }]}>{task.category}</Text>
+                          </View>
+                          <View style={[styles.priorityTag, { backgroundColor: `${task.priorityColor}20` }]}>
+                            <View style={[styles.priorityDot, { backgroundColor: task.priorityColor }]} />
+                            <Text style={[styles.tagText, { color: task.priorityColor }]}>{task.priority} Priority</Text>
+                          </View>
+                        </View>
+                      </View>
+                      <TouchableOpacity style={styles.editButton}>
+                        <MaterialIcons name="edit-note" size={24} color="#94a3b8" />
+                      </TouchableOpacity>
+                    </View>
+                    
+                    <View style={styles.taskDetails}>
+                      <MaterialIcons name={task.icon as any} size={16} color="#64748b" />
+                      <Text style={styles.detailText}>{task.dueDate || task.details}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+                
+                {/* Quick Add Placeholder */}
+                <TouchableOpacity 
+                  style={styles.addButton}
+                  onPress={() => router.push('../task-details')}
+                >
+                  <MaterialIcons name="add-circle" size={20} color="#94a3b8" />
+                  <Text style={styles.addButtonText}>Add another task</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </MotiView>
+        </ScrollView>
+
+        {/* Sticky Footer CTA */}
+        <MotiView
+          from={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 300, delay: 500 }}
         >
-          <Text style={styles.ctaText}>Plan my week</Text>
-          <MaterialIcons name="auto-awesome" size={20} color="white" />
-        </TouchableOpacity>
-        <View style={styles.homeIndicatorSpacer} />
+          <View style={styles.footer}>
+            <TouchableOpacity 
+              style={styles.ctaButton}
+              onPress={() => {
+                triggerHaptic('medium');
+                router.push('/weekly-planner');
+              }}
+            >
+              <Text style={styles.ctaText}>Plan my week</Text>
+              <MaterialIcons name="auto-awesome" size={20} color="white" />
+            </TouchableOpacity>
+            <View style={styles.homeIndicatorSpacer} />
+          </View>
+        </MotiView>
       </View>
-    </View>
+    </TransitionOverlay>
   );
 }
 
@@ -388,8 +434,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: 16,
-    backgroundColor: 'rgba(245, 247, 248, 0.8)',
-    backdropFilter: 'blur(12px)',
+    backgroundColor: 'rgba(245, 247, 248, 0.9)',
     borderTopWidth: 1,
     borderTopColor: '#e2e8f0',
   },

@@ -2,7 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function TaskDetailsScreen() {
   const router = useRouter();
@@ -10,7 +10,7 @@ export default function TaskDetailsScreen() {
   const [category, setCategory] = useState('work');
   const [duration, setDuration] = useState(105); // in minutes (1h 45m)
   const [priority, setPriority] = useState('med');
-  const [deadlineEnabled, setDeadlineEnabled] = useState(true);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   const categories = [
     { value: 'work', label: '💼 Work', icon: 'work' },
@@ -39,6 +39,27 @@ export default function TaskDetailsScreen() {
     const maxMinutes = 240; // 4 hours
     const minMinutes = 15;
     return ((duration - minMinutes) / (maxMinutes - minMinutes)) * 100;
+  };
+
+  const handleSliderChange = (event: any) => {
+    const { locationX, nativeEvent } = event;
+    if (!nativeEvent || nativeEvent.pageX === undefined) return;
+    
+    // Get the slider track dimensions
+    const sliderWidth = event.currentTarget.style?.width || 300;
+    const percentage = Math.max(0, Math.min(100, (locationX / (sliderWidth as number)) * 100));
+    
+    // Convert percentage to duration (15 to 240 minutes)
+    const minMinutes = 15;
+    const maxMinutes = 240;
+    const newDuration = minMinutes + (percentage / 100) * (maxMinutes - minMinutes);
+    
+    setDuration(Math.round(newDuration));
+  };
+
+  const handleCategorySelect = (value: string) => {
+    setCategory(value);
+    setShowCategoryDropdown(false);
   };
 
   return (
@@ -81,12 +102,39 @@ export default function TaskDetailsScreen() {
             <Text style={styles.sectionLabel}>Category</Text>
             
             <View style={styles.dropdownContainer}>
-              <View style={styles.dropdownButton}>
+              <TouchableOpacity 
+                style={styles.dropdownButton}
+                onPress={() => setShowCategoryDropdown(!showCategoryDropdown)}
+              >
                 <Text style={styles.dropdownText}>
                   {categories.find(cat => cat.value === category)?.label}
                 </Text>
-                <MaterialIcons name="expand-more" size={24} color="#9ca3af" />
-              </View>
+                <MaterialIcons 
+                  name={showCategoryDropdown ? "expand-less" : "expand-more"} 
+                  size={24} 
+                  color="#9ca3af" 
+                />
+              </TouchableOpacity>
+
+              {/* Dropdown Menu */}
+              {showCategoryDropdown && (
+                <View style={styles.dropdownMenu}>
+                  {categories.map((cat) => (
+                    <TouchableOpacity
+                      key={cat.value}
+                      style={styles.dropdownItem}
+                      onPress={() => handleCategorySelect(cat.value)}
+                    >
+                      <View style={styles.dropdownItemContent}>
+                        <Text style={styles.dropdownItemLabel}>{cat.label}</Text>
+                        {category === cat.value && (
+                          <MaterialIcons name="check" size={20} color="#0f6df0" />
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
             </View>
           </View>
 
@@ -102,12 +150,16 @@ export default function TaskDetailsScreen() {
             </View>
             
             <View style={styles.sliderContainer}>
-              <View style={styles.sliderTrack}>
+              <TouchableOpacity 
+                style={styles.sliderTrack}
+                onPress={handleSliderChange}
+                activeOpacity={0.7}
+              >
                 <View 
                   style={[styles.sliderFill, { width: `${Math.min(Math.max(getDurationPercentage(), 0), 100)}%` }]}
                 />
                 <View style={[styles.sliderThumb, { left: `${Math.min(Math.max(getDurationPercentage(), 0), 100)}%` }]} />
-              </View>
+              </TouchableOpacity>
               
               <View style={styles.sliderLabels}>
                 <Text style={styles.sliderLabelText}>15m</Text>
@@ -141,24 +193,6 @@ export default function TaskDetailsScreen() {
                 </TouchableOpacity>
               ))}
             </View>
-          </View>
-
-          {/* Deadline Toggle */}
-          <View style={styles.deadlineContainer}>
-            <View style={styles.deadlineContent}>
-              <MaterialIcons name="event" size={24} color="#0f6df0" />
-              <Text style={styles.deadlineText}>
-                Must be done this week
-              </Text>
-            </View>
-            
-            <Switch
-              trackColor={{ false: '#ccc', true: '#0f6df0' }}
-              thumbColor={deadlineEnabled ? '#fff' : '#f4f3f4'}
-              ios_backgroundColor="#ccc"
-              onValueChange={setDeadlineEnabled}
-              value={deadlineEnabled}
-            />
           </View>
         </View>
       </ScrollView>
@@ -246,6 +280,7 @@ const styles = StyleSheet.create({
   },
   dropdownContainer: {
     position: 'relative',
+    zIndex: 10,
   },
   dropdownButton: {
     flexDirection: 'row',
@@ -257,6 +292,38 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   dropdownText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#0d131c',
+  },
+  dropdownMenu: {
+    position: 'absolute',
+    top: 60,
+    left: 0,
+    right: 0,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    zIndex: 20,
+  },
+  dropdownItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  dropdownItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dropdownItemLabel: {
     fontSize: 16,
     fontWeight: '500',
     color: '#0d131c',
@@ -348,24 +415,6 @@ const styles = StyleSheet.create({
     color: '#9ca3af',
   },
   priorityButtonTextActive: {
-    color: '#0d131c',
-  },
-  deadlineContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#f0f4f9',
-    padding: 20,
-    borderRadius: 12,
-  },
-  deadlineContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  deadlineText: {
-    fontSize: 16,
-    fontWeight: '600',
     color: '#0d131c',
   },
   footer: {

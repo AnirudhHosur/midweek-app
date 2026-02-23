@@ -1,14 +1,17 @@
 import { Slot, useRouter } from "expo-router";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
+import { AnimationProvider } from "../contexts/AnimationContext";
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
 import "../global.css";
 
-// This layout wraps the entire app with AuthProvider
+// This layout wraps the entire app with AuthProvider and AnimationProvider
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <AuthLayout />
+      <AnimationProvider>
+        <AuthLayout />
+      </AnimationProvider>
     </AuthProvider>
   );
 }

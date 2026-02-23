@@ -9,16 +9,21 @@ declare module "expo-router" {
       | "/"
       | "/home" 
       | "/profile" 
+      | "/profile-settings"
       | "/settings" 
       | "/task-details" 
       | "/transcribe" 
-      | "/welcome";
+      | "/weekly-planner"
+      | "/welcome"
+      | "/insights";
     
+    DynamicRoutes: never;
     RouteGroupRoutes: 
       | "(auth)/login" 
       | "(auth)/signup" 
       | "(tabs)";
+    RelativeRoutes: never;
       
-    AllRoutes: StaticRoutes | RouteGroupRoutes;
+    AllRoutes: StaticRoutes | RouteGroupRoutes | DynamicRoutes | RelativeRoutes;
   }
 }
