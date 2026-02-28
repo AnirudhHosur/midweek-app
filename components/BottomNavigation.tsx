@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { usePathname, useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface NavItem {
   id: string;
@@ -20,6 +21,7 @@ const NAV_ITEMS: NavItem[] = [
 export const BottomNavigation: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const { isDarkMode, colors } = useTheme();
 
   const isActiveRoute = (route: string) => {
     if (route === '/home') {
@@ -35,7 +37,7 @@ export const BottomNavigation: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.navBar}>
+      <View style={[styles.navBar, { backgroundColor: colors.background.elevated, borderTopColor: colors.border.subtle }]}>
         {NAV_ITEMS.map((item) => {
           const isActive = isActiveRoute(item.route);
           
@@ -49,11 +51,11 @@ export const BottomNavigation: React.FC = () => {
               <MaterialIcons
                 name={item.icon as any}
                 size={24}
-                color={isActive ? '#2dd4bf' : '#94a3b8'}
+                color={isActive ? colors.brand.primary : colors.text.muted}
               />
               <Text style={[
                 styles.navLabel,
-                { color: isActive ? '#2dd4bf' : '#94a3b8' }
+                { color: isActive ? colors.brand.primary : colors.text.muted }
               ]}>
                 {item.label}
               </Text>
@@ -74,9 +76,7 @@ const styles = StyleSheet.create({
     zIndex: 50,
   },
   navBar: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(226, 232, 240, 0.5)',
     paddingHorizontal: 24,
     paddingBottom: 32,
     paddingTop: 16,

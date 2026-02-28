@@ -3,15 +3,18 @@ import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { AnimationProvider } from "../contexts/AnimationContext";
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
+import { ThemeProvider } from "../contexts/ThemeContext";
 import "../global.css";
 
-// This layout wraps the entire app with AuthProvider and AnimationProvider
+// This layout wraps the entire app with AuthProvider, ThemeProvider and AnimationProvider
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <AnimationProvider>
-        <AuthLayout />
-      </AnimationProvider>
+      <ThemeProvider>
+        <AnimationProvider>
+          <AuthLayout />
+        </AnimationProvider>
+      </ThemeProvider>
     </AuthProvider>
   );
 }

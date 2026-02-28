@@ -1,13 +1,17 @@
 import { MaterialIcons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { BottomNavigation } from '../../components/BottomNavigation';
-import { COLORS, FONTS, SPACING } from '../../constants/AppConstants';
+import { FONTS, SPACING } from '../../constants/AppConstants';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const HomeScreen: React.FC = () => {
   const router = useRouter();
+  const { isDarkMode, colors } = useTheme();
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -29,34 +33,60 @@ const HomeScreen: React.FC = () => {
   }, [pulseAnim]);
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" translucent backgroundColor="transparent" />
+    <View style={[styles.container, { backgroundColor: colors.background.base }]}>
+      <StatusBar style={isDarkMode ? "light" : "dark"} translucent backgroundColor="transparent" />
       
-      {/* Hero Section - Centered and Clean */}
+      {/* Header with Settings Icon */}
+      <View style={[styles.header, { borderBottomColor: colors.border.subtle }]}>
+        <Text style={[styles.headerPlaceholder]} />
+        <TouchableOpacity 
+          onPress={() => router.push('/settings')}
+          activeOpacity={0.7}
+        >
+          <MaterialIcons name="settings" size={24} color={colors.text.secondary} />
+        </TouchableOpacity>
+      </View>
+      
+      {/* Subtle Background Glow */}
+      <View style={[styles.glowOrb, { backgroundColor: colors.brand.soft, opacity: isDarkMode ? 0.3 : 0.15 }]} />
+      
+      {/* Hero Section - Clean Hierarchy */}
       <View style={styles.heroSection}>
-        <Text style={styles.appTitle}>Mind Week</Text>
-        <Text style={styles.heroText}>
-          Press and speak everything on your mind...
+        <Text style={[styles.appTitle, { color: colors.text.primary }]}>
+          Mind Week
+        </Text>
+        <Text style={[styles.heroSubtitle, { color: colors.text.secondary }]}>
+          Speak freely, we'll organize
         </Text>
         
-        {/* Floating Microphone Action */}
+        {/* Gradient Microphone Button */}
         <View style={styles.micContainer}>
           <Animated.View 
             style={[
-              styles.micButton, 
+              styles.micButtonWrapper,
               { transform: [{ scale: pulseAnim }] }
             ]}
           >
-            <TouchableOpacity
-              onPress={() => router.push('/transcribe')}
-              style={styles.micTouchable}
+            <LinearGradient
+              colors={[colors.brand.primary, '#7c3aed']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.micButton}
             >
-              <MaterialIcons 
-                name="mic" 
-                size={48} 
-                color="white"
-              />
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  router.push('/transcribe');
+                }}
+                style={styles.micTouchable}
+              >
+                <MaterialIcons 
+                  name="mic" 
+                  size={48} 
+                  color="white"
+                />
+              </TouchableOpacity>
+            </LinearGradient>
           </Animated.View>
         </View>
       </View>
@@ -70,7 +100,26 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background.light,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.md,
+    paddingTop: SPACING.xl,
+    paddingBottom: SPACING.md,
+    borderBottomWidth: 1,
+  },
+  headerPlaceholder: {
+    width: 24,
+  },
+  glowOrb: {
+    position: 'absolute',
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    top: '20%',
+    alignSelf: 'center',
   },
   heroSection: {
     flex: 1,
@@ -82,36 +131,36 @@ const styles = StyleSheet.create({
   appTitle: {
     fontSize: FONTS.sizes.xxxl,
     fontWeight: FONTS.weights.extraBold as any,
-    color: COLORS.primary,
     textAlign: 'center',
-    marginBottom: SPACING.xs,
+    marginBottom: SPACING.sm,
     letterSpacing: -0.5,
   },
-  heroText: {
-    fontSize: FONTS.sizes.huge,
-    fontWeight: FONTS.weights.bold as any,
-    color: COLORS.background.dark,
+  heroSubtitle: {
+    fontSize: 18,
+    fontWeight: '500',
     textAlign: 'center',
-    maxWidth: 300,
+    maxWidth: 280,
     marginBottom: SPACING.xl,
-    lineHeight: 36,
+    lineHeight: 24,
   },
   micContainer: {
     alignItems: 'center',
     justifyContent: 'center',
   },
+  micButtonWrapper: {
+    marginTop: SPACING.lg,
+  },
   micButton: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 12,
   },
   micTouchable: {
     flex: 1,

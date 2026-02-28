@@ -6,9 +6,11 @@ import { useEffect, useRef } from 'react';
 import { Animated, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { TransitionOverlay } from '../components/animations/TransitionOverlay';
 import { useAnimation } from '../contexts/AnimationContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function TranscribeScreen() {
   const router = useRouter();
+  const { isDarkMode, colors } = useTheme();
   const waveAnimation = useRef(new Animated.Value(0)).current;
   const { triggerHaptic, resetTransition } = useAnimation();
   
@@ -19,7 +21,7 @@ export default function TranscribeScreen() {
       title: 'Fill IRCC form',
       category: 'Admin',
       priority: 'High',
-      priorityColor: '#ef4444',
+      priorityColor: colors.state.error,
       dueDate: 'Due by Tuesday',
       icon: 'event'
     },
@@ -28,7 +30,7 @@ export default function TranscribeScreen() {
       title: 'Buy groceries',
       category: 'Home',
       priority: 'Medium',
-      priorityColor: '#f59e0b',
+      priorityColor: colors.state.warning,
       details: 'Milk and bread',
       icon: 'shopping-cart'
     }
@@ -69,6 +71,7 @@ export default function TranscribeScreen() {
       key={i}
       style={[
         styles.waveBar,
+        { backgroundColor: colors.brand.primary },
         {
           transform: [{
             scaleY: waveAnimation.interpolate({
@@ -83,10 +86,10 @@ export default function TranscribeScreen() {
 
   return (
     <TransitionOverlay isActive={false}>
-      <View style={styles.container}>
-        <StatusBar style="dark" translucent={true} backgroundColor="transparent" />
+      <View style={[styles.container, { backgroundColor: colors.background.base }]}>
+        <StatusBar style={isDarkMode ? "light" : "dark"} translucent={true} backgroundColor="transparent" />
         {/* Top Navigation Bar */}
-        <View style={styles.navbar}>
+        <View style={[styles.navbar, { borderBottomColor: colors.border.subtle }]}>
           <TouchableOpacity 
             style={styles.backButton}
             onPress={() => {
@@ -94,13 +97,13 @@ export default function TranscribeScreen() {
               router.back();
             }}
           >
-            <MaterialIcons name="arrow-back-ios" size={24} color="#0d131c" />
+            <MaterialIcons name="arrow-back-ios" size={24} color={colors.text.primary} />
           </TouchableOpacity>
           
-          <Text style={styles.navTitle}>MindWeek</Text>
+          <Text style={[styles.navTitle, { color: colors.text.primary }]}>MindWeek</Text>
           
           <TouchableOpacity style={styles.menuButton}>
-            <MaterialIcons name="more-horiz" size={24} color="#0d131c" />
+            <MaterialIcons name="more-horiz" size={24} color={colors.text.secondary} />
           </TouchableOpacity>
         </View>
 
@@ -113,13 +116,13 @@ export default function TranscribeScreen() {
           >
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>RAW TRANSCRIPT</Text>
-                <Text style={styles.autoSaveText}>Auto-saved</Text>
+                <Text style={[styles.sectionTitle, { color: colors.text.muted }]}>RAW TRANSCRIPT</Text>
+                <Text style={[styles.autoSaveText, { color: colors.state.success }]}>Auto-saved</Text>
               </View>
               
-              <View style={styles.transcriptBox}>
-                <Text style={styles.transcriptText}>
-                  &quot;I need to finish that <Text style={styles.highlight}>IRCC form</Text> by <Text style={styles.highlight}>Tuesday</Text> and also grab some <Text style={styles.highlight}>milk and bread</Text> on the way home...&quot;
+              <View style={[styles.transcriptBox, { backgroundColor: colors.background.elevated, borderColor: colors.border.default }]}>
+                <Text style={[styles.transcriptText, { color: colors.text.primary }]}>
+                  &quot;I need to finish that <Text style={[styles.highlight, { color: colors.brand.primary }]}>IRCC form</Text> by <Text style={[styles.highlight, { color: colors.brand.primary }]}>Tuesday</Text> and also grab some <Text style={[styles.highlight, { color: colors.brand.primary }]}>milk and bread</Text> on the way home...&quot;
                 </Text>
               </View>
             </View>
@@ -135,7 +138,7 @@ export default function TranscribeScreen() {
               <View style={styles.waveform}>
                 {waveBars}
               </View>
-              <Text style={styles.processingText}>AI is processing your brain dump...</Text>
+              <Text style={[styles.processingText, { color: colors.text.secondary }]}>AI is processing your brain dump...</Text>
             </View>
           </MotiView>
 
@@ -279,24 +282,19 @@ const styles = StyleSheet.create({
   },
   autoSaveText: {
     fontSize: 12,
-    color: '#0f6df0',
     fontWeight: '500',
   },
   transcriptBox: {
-    backgroundColor: 'white',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
     maxHeight: 128,
   },
   transcriptText: {
     fontSize: 16,
-    color: '#0d131c',
     lineHeight: 24,
   },
   highlight: {
-    color: '#0f6df0',
     fontWeight: '500',
   },
   waveformContainer: {
@@ -316,13 +314,11 @@ const styles = StyleSheet.create({
   waveBar: {
     width: 4,
     height: 32,
-    backgroundColor: '#2dd4bf',
     borderRadius: 2,
   },
   processingText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#0d9488',
   },
   taskHeader: {
     flexDirection: 'row',

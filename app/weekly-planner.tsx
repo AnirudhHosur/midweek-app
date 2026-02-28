@@ -5,11 +5,12 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { BottomNavigation } from '../components/BottomNavigation';
 import { useAnimation } from '../contexts/AnimationContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
 
-// Fake data for events
-const FAKE_EVENTS = [
+// Fake data for events - will use theme colors
+const createFakeEvents = (colors: any) => [
   {
     id: 1,
     title: 'Office work',
@@ -17,9 +18,9 @@ const FAKE_EVENTS = [
     startTime: '08:00',
     endTime: '12:00',
     timeSlot: '08:00 AM',
-    color: '#0f6df0',
-    bgColor: 'rgba(15, 109, 240, 0.1)',
-    borderColor: '#0f6df0'
+    color: colors.brand.primary,
+    bgColor: colors.brand.soft,
+    borderColor: colors.brand.primary
   },
   {
     id: 2,
@@ -28,9 +29,9 @@ const FAKE_EVENTS = [
     startTime: '12:00',
     endTime: '13:00',
     timeSlot: '12:00 PM',
-    color: '#ea580c',
-    bgColor: 'rgba(234, 88, 12, 0.1)',
-    borderColor: '#ea580c'
+    color: colors.state.warning,
+    bgColor: colors.background.subtle,
+    borderColor: colors.state.warning
   },
   {
     id: 3,
@@ -39,9 +40,9 @@ const FAKE_EVENTS = [
     startTime: '13:00',
     endTime: '14:00',
     timeSlot: '01:00 PM',
-    color: '#0d9488',
-    bgColor: 'rgba(13, 148, 136, 0.1)',
-    borderColor: '#0d9488'
+    color: colors.state.success,
+    bgColor: colors.background.subtle,
+    borderColor: colors.state.success
   }
 ];
 
@@ -71,8 +72,10 @@ const WEEK_DAYS = [
 export default function WeeklyPlannerScreen() {
   const router = useRouter();
   const { triggerHaptic } = useAnimation();
+  const { isDarkMode, colors } = useTheme();
   const currentTimeIndicatorPosition = useRef(new Animated.Value(420)).current; // Position for 10:30 AM
   const [selectedDay, setSelectedDay] = useState(0);
+  const FAKE_EVENTS = createFakeEvents(colors);
 
   useEffect(() => {
     // Animate current time indicator
@@ -102,31 +105,31 @@ export default function WeeklyPlannerScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" translucent={true} backgroundColor="transparent" />
+    <View style={[styles.container, { backgroundColor: colors.background.base }]}>
+      <StatusBar style={isDarkMode ? 'light' : 'dark'} translucent={true} backgroundColor="transparent" />
       
       {/* Top App Bar */}
-      <View style={styles.topAppBar}>
+      <View style={[styles.topAppBar, { borderBottomColor: colors.border.subtle }]}>
         <View style={styles.topBarLeft}>
-          <MaterialIcons name="calendar-today" size={28} color="#0f6df0" />
+          <MaterialIcons name="calendar-today" size={28} color={colors.brand.primary} />
           <View style={styles.topBarText}>
-            <Text style={styles.monthText}>July 2024</Text>
-            <Text style={styles.syncText}>AI Synced 2m ago</Text>
+            <Text style={[styles.monthText, { color: colors.text.primary }]}>July 2024</Text>
+            <Text style={[styles.syncText, { color: colors.text.secondary }]}>AI Synced 2m ago</Text>
           </View>
         </View>
         
         <View style={styles.topBarRight}>
           <TouchableOpacity style={styles.iconButton}>
-            <MaterialIcons name="search" size={24} color="#64748b" />
+            <MaterialIcons name="search" size={24} color={colors.text.muted} />
           </TouchableOpacity>
-          <View style={styles.profileAvatar}>
-            <MaterialIcons name="person" size={20} color="#64748b" />
+          <View style={[styles.profileAvatar, { backgroundColor: colors.background.elevated, borderColor: colors.border.default }]}>
+            <MaterialIcons name="person" size={20} color={colors.text.muted} />
           </View>
         </View>
       </View>
 
       {/* Weekly Tabs (Day Selector) */}
-      <View style={styles.weekTabs}>
+      <View style={[styles.weekTabs, { backgroundColor: colors.background.elevated }]}>
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false}
@@ -137,14 +140,15 @@ export default function WeeklyPlannerScreen() {
               key={index}
               style={[
                 styles.dayTab,
-                day.isSelected && styles.selectedDayTab
+                day.isSelected && styles.selectedDayTab,
+                day.isSelected ? { backgroundColor: colors.brand.primary } : { backgroundColor: 'transparent' }
               ]}
               onPress={() => setSelectedDay(index)}
             >
               <Text 
                 style={[
                   styles.dayText,
-                  day.isSelected ? styles.selectedDayText : styles.unselectedDayText
+                  day.isSelected ? { color: '#ffffff' } : { color: colors.text.muted }
                 ]}
               >
                 {day.day}
@@ -152,7 +156,7 @@ export default function WeeklyPlannerScreen() {
               <Text 
                 style={[
                   styles.dateText,
-                  day.isSelected ? styles.selectedDateText : styles.unselectedDateText
+                  day.isSelected ? { color: '#ffffff' } : { color: colors.text.secondary }
                 ]}
               >
                 {day.date}
@@ -163,7 +167,7 @@ export default function WeeklyPlannerScreen() {
       </View>
 
       {/* Main Content: Scrollable Time Grid */}
-      <View style={styles.contentContainer}>
+      <View style={[styles.contentContainer, { backgroundColor: colors.background.base }]}>
         {/* Current Time Line Indicator */}
         <Animated.View 
           style={[
@@ -171,11 +175,11 @@ export default function WeeklyPlannerScreen() {
             { top: currentTimeIndicatorPosition }
           ]}
         >
-          <View style={styles.timeLabel}>
-            <Text style={styles.timeLabelText}>10:30</Text>
+          <View style={[styles.timeLabel, { backgroundColor: colors.brand.primary }]}>
+            <Text style={[styles.timeLabelText, { color: '#ffffff' }]}>10:30</Text>
           </View>
-          <View style={styles.timeline}>
-            <View style={styles.timelineDot} />
+          <View style={[styles.timeline, { borderBottomColor: colors.brand.primary }]}>
+            <View style={[styles.timelineDot, { backgroundColor: colors.brand.primary }]} />
           </View>
         </Animated.View>
 
@@ -186,9 +190,9 @@ export default function WeeklyPlannerScreen() {
           {TIME_SLOTS.map((slot, slotIndex) => {
             const events = getEventsForTimeSlot(slot.time);
             return (
-              <View key={slotIndex} style={styles.timeSlotRow}>
+              <View key={slotIndex} style={[styles.timeSlotRow, { borderBottomColor: colors.border.subtle }]}>
                 <View style={styles.timeLabelColumn}>
-                  <Text style={styles.timeLabelText}>{slot.time.replace(' ', '\n')}</Text>
+                  <Text style={[styles.timeLabelText, { color: colors.text.muted }]}>{slot.time.replace(' ', '\n')}</Text>
                 </View>
                 
                 <View style={styles.eventsColumn}>
@@ -208,7 +212,7 @@ export default function WeeklyPlannerScreen() {
                           <Text style={[styles.eventCategory, { color: event.color }]}>
                             {event.category}
                           </Text>
-                          <Text style={styles.eventTitle}>{event.title}</Text>
+                          <Text style={[styles.eventTitle, { color: colors.text.primary }]}>{event.title}</Text>
                         </View>
                         <View style={styles.eventTimeContainer}>
                           <MaterialIcons 
@@ -216,7 +220,7 @@ export default function WeeklyPlannerScreen() {
                             size={14} 
                             color={event.color} 
                           />
-                          <Text style={[styles.eventTime, { color: `${event.color}cc` }]}>
+                          <Text style={[styles.eventTime, { color: event.color }]}>
                             {event.startTime} - {event.endTime}
                           </Text>
                         </View>
@@ -235,10 +239,10 @@ export default function WeeklyPlannerScreen() {
       {/* Teal FAB */}
       <View style={styles.fabContainer}>
         <View style={styles.fabHint}>
-          <Text style={styles.fabHintText}>"Brain dump your thoughts..."</Text>
+          <Text style={[styles.fabHintText, { color: colors.text.secondary }]}>"Brain dump your thoughts..."</Text>
         </View>
         <TouchableOpacity 
-          style={styles.fab}
+          style={[styles.fab, { backgroundColor: colors.brand.primary }]}
           onPress={handleMicPress}
           activeOpacity={0.8}
         >
@@ -255,16 +259,15 @@ export default function WeeklyPlannerScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
   },
   topAppBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
     padding: 16,
     paddingBottom: 8,
     justifyContent: 'space-between',
     paddingTop: 50,
+    borderBottomWidth: 1,
   },
   topBarLeft: {
     flexDirection: 'row',
@@ -277,13 +280,11 @@ const styles = StyleSheet.create({
   monthText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#0d131c',
     lineHeight: 22,
     letterSpacing: -0.2,
   },
   syncText: {
     fontSize: 12,
-    color: '#64748b',
     fontWeight: '500',
   },
   topBarRight: {
@@ -299,14 +300,12 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#e2e8f0',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
   },
   weekTabs: {
-    backgroundColor: '#ffffff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
   },
   weekTabsContainer: {
     paddingHorizontal: 16,
@@ -316,15 +315,14 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    borderBottomWidth: 3,
-    borderBottomColor: 'transparent',
     paddingBottom: 12,
     paddingTop: 16,
     minWidth: 50,
     flex: 1,
+    borderRadius: 8,
   },
   selectedDayTab: {
-    borderBottomColor: '#0f6df0',
+    borderRadius: 8,
   },
   dayText: {
     fontSize: 10,
@@ -333,25 +331,12 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginBottom: 4,
   },
-  selectedDayText: {
-    color: '#0f6df0',
-  },
-  unselectedDayText: {
-    color: '#94a3b8',
-  },
   dateText: {
     fontSize: 16,
     fontWeight: 'bold',
   },
-  selectedDateText: {
-    color: '#0d131c',
-  },
-  unselectedDateText: {
-    color: '#64748b',
-  },
   contentContainer: {
     flex: 1,
-    backgroundColor: '#f8fafc',
   },
   currentTimeLine: {
     position: 'absolute',
@@ -365,16 +350,17 @@ const styles = StyleSheet.create({
     width: 48,
     alignItems: 'flex-end',
     paddingRight: 8,
+    borderRadius: 4,
+    paddingVertical: 2,
+    paddingHorizontal: 6,
   },
   timeLabelText: {
     fontSize: 10,
     fontWeight: 'bold',
-    color: '#0f6df0',
   },
   timeline: {
     flex: 1,
     height: 1,
-    backgroundColor: '#0f6df0',
     position: 'relative',
   },
   timelineDot: {
@@ -384,7 +370,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#0f6df0',
   },
   timeGrid: {
     flex: 1,
@@ -393,7 +378,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     minHeight: 100,
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
   },
   timeLabelColumn: {
     width: 56,
@@ -432,7 +416,6 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#0d131c',
     lineHeight: 18,
   },
   eventTimeContainer: {
@@ -455,28 +438,23 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   fabHint: {
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
     marginBottom: 4,
   },
   fabHintText: {
     fontSize: 10,
     fontWeight: 'bold',
-    color: '#0f6df0',
     fontStyle: 'italic',
   },
   fab: {
     width: 56,
     height: 56,
-    backgroundColor: '#2dd4bf',
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#2dd4bf',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -484,9 +462,7 @@ const styles = StyleSheet.create({
   },
   bottomNav: {
     height: 80,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
     paddingHorizontal: 32,
     flexDirection: 'row',
     alignItems: 'center',
@@ -500,11 +476,9 @@ const styles = StyleSheet.create({
   navButtonText: {
     fontSize: 10,
     fontWeight: 'bold',
-    color: '#94a3b8',
   },
   navButtonTextActive: {
     fontSize: 10,
     fontWeight: 'bold',
-    color: '#0f6df0',
   },
 });
